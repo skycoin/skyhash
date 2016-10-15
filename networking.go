@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"time"
 
-	gnet "github.com/skycoin/telehash/gnet"
 	"github.com/skycoin/skycoin/src/cipher"
+	gnet "github.com/skycoin/telehash/gnet"
 )
 
 //this is called when client connects
@@ -213,29 +213,4 @@ func SpawnNetwork(n int) []*PublicBroadcastChannelNode {
 	}
 
 	return NodeList
-}
-
-func main() {
-	Node1 := NewPublicBroadcastChannelNode()
-	Node1.InitConnectionPool(6060)
-
-	Node2 := NewPublicBroadcastChannelNode()
-	Node2.InitConnectionPool(6061)
-
-	//connect to peer
-	con, err := Node1.AddConnection("127.0.0.1:6061")
-	_ = con
-
-	if err != nil {
-		log.Panic(err)
-	}
-
-	//create a message to send
-	tm := TestMessage{Text: []byte("Message test")}
-	//Node1.ConnectionPool.SendMessage(con, 1, &tm)
-	Node1.Dispatcher.SendMessage(con, 1, &tm)
-
-	//d1.BroadcastMessage(3, &tm)
-
-	time.Sleep(time.Second * 10)
 }
