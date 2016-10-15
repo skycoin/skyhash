@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"time"
 
-	gnet "github.com/skycoin/telehash/gnet"
 	"github.com/skycoin/skycoin/src/cipher"
+	gnet "github.com/skycoin/telehash/gnet"
 )
 
 //this is called when client connects
@@ -22,9 +22,15 @@ func onDisconnect(c *gnet.Connection,
 }
 
 //this is called when a message is received
-func onMessage(c *gnet.Connection, channel uint16,
-	msg []byte) error {
-	fmt.Printf("Event Callback: message event: addr= %s, channel %v, msg= %s \n", c.Addr(), channel, msg)
+//DEPRECATED: Uses dispatch manageras message handler
+//func onMessage(c *gnet.Connection, channel uint16,
+//	msg []byte) error {
+//	fmt.Printf("Event Callback: message event: addr= %s, channel %v, msg= %s \n", c.Addr(), channel, msg)
+//	return nil
+//}
+
+func onMessage(c *gnet.Connection, channel uint16, msg []byte) error {
+	log.Panic("OnMessage not set. Error Delegate to dispatch manager")
 	return nil
 }
 
@@ -33,7 +39,7 @@ func SpawnConnectionPool(Port int) *gnet.ConnectionPool {
 	config.Port = uint16(Port)               //set listening port
 	config.DisconnectCallback = onDisconnect //disconnect callback
 	config.ConnectCallback = onConnect       //connect callback
-	config.MessageCallback = onMessage       //message callback
+	config.MessageCallback = onMessage       //message callback, use dispatch manager as handler
 
 	//create pool
 	cpool := gnet.NewConnectionPool(config)
@@ -129,7 +135,7 @@ var messageMap map[string](interface{}) = map[string](interface{}){
 
 type PublicBroadcastChannelNode struct {
 	ConnectionPool *gnet.ConnectionPool
-	Dispatcher     *gnet.Dispatcher
+	Dispatcher     *gnet.Dispatcher //simulates a port
 }
 
 //new object
@@ -178,6 +184,7 @@ func (self *PublicBroadcastChannelNode) BroadcastMessage(message gnet.Message) {
 }
 
 //spawn network or array, the randomly connect them to each other
+//Run a network of nodes
 func SpawnNetwork(n int) []*PublicBroadcastChannelNode {
 
 	var StartPort = 6060
@@ -215,7 +222,8 @@ func SpawnNetwork(n int) []*PublicBroadcastChannelNode {
 	return NodeList
 }
 
-func main() {
+//Run two nodes for testing
+func RunTwoNodes() {
 	Node1 := NewPublicBroadcastChannelNode()
 	Node1.InitConnectionPool(6060)
 
