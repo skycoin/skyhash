@@ -14,7 +14,7 @@ import (
 	"gopkg.in/op/go-logging.v1"
 
 	"github.com/skycoin/skycoin/src/util"
-	"github.com/skycoin/telehash/skyhashmanager"
+	"github.com/skycoin/skyhash/skyhashmanager"
 
 	wh "github.com/skycoin/skycoin/src/util/http" //http,json helpers
 )

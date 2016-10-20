@@ -11,8 +11,8 @@ import (
 
 	"github.com/skycoin/skycoin/src/util"
 
-	"github.com/skycoin/telehash/gui"
-	"github.com/skycoin/telehash/skyhashmanager"
+	"github.com/skycoin/skyhash/gui"
+	"github.com/skycoin/skyhash/skyhashmanager"
 )
 
 const (
