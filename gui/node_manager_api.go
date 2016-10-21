@@ -7,7 +7,7 @@ import (
 	//"strconv"
 
 	wh "github.com/skycoin/skycoin/src/util/http"
-	"github.com/skycoin/telehash/skyhashmanager"
+	"github.com/skycoin/skyhash/skyhashmanager"
 )
 
 func testHandler(shm *skyhashmanager.SkyhashManager) http.HandlerFunc {
@@ -21,6 +21,13 @@ func testHandler(shm *skyhashmanager.SkyhashManager) http.HandlerFunc {
 			//wh.SendOr404(w, nm.GetConnection(addr))
 			wh.Error404(w)
 		}
+	}
+}
+
+func subscriptionsGetHandler(shm *skyhashmanager.SkyhashManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Info("Get subscriptions list")
+		wh.SendJSON(w, shm.Subscriptions)
 	}
 }
 
@@ -164,6 +171,8 @@ func RegisterNodeManagerHandlers(mux *http.ServeMux, shm *skyhashmanager.Skyhash
 
 	//  Test  Will be assigned name if present.
 	mux.HandleFunc("/test", testHandler(shm))
+
+	mux.HandleFunc("/subscriptions", subscriptionsGetHandler(shm))
 
 	//Route for start Node
 	//mux.HandleFunc("/nodemanager/start", nodeStartHandler(nm))
