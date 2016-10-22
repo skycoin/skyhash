@@ -51,13 +51,20 @@ func DELETE(handler func(w http.ResponseWriter, r *http.Request)) func(w http.Re
 	}
 }
 
-type MethodRoute struct {
+type mRoute struct {
 	method  string
 	handler func(w http.ResponseWriter, r *http.Request)
 }
 
-// MethodMux selects a MethodRoute based on the method of the request
-func MethodMux(methodMuxes ...MethodRoute) func(w http.ResponseWriter, r *http.Request) {
+func MethodToHandler(method string, handler func(w http.ResponseWriter, r *http.Request)) *mRoute {
+	return &mRoute{
+		method:  method,
+		handler: handler,
+	}
+}
+
+// MethodMux selects a mRoute based on the method of the request
+func MethodMux(methodMuxes ...*mRoute) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for _, m := range methodMuxes {
 			if r.Method == m.method {
@@ -88,28 +95,18 @@ func RegisterNodeManagerHandlers(mux *http.ServeMux, shm *skyhashmanager.Skyhash
 
 	mux.HandleFunc("/nodemanager/nodes", MethodMux(
 		//Route for listing Nodes
-		MethodRoute{
-			method:  http.MethodGet,
-			handler: GET(lshm.handlerListNodes),
-		},
+		MethodToHandler(http.MethodGet, GET(lshm.handlerListNodes)),
 	))
 
 	mux.HandleFunc("/nodemanager/transports", MethodMux(
 		//Route for listing transports from Node
-		MethodRoute{
-			method:  http.MethodGet,
-			handler: GET(lshm.handlerListTransports),
-		},
+		MethodToHandler(http.MethodGet, lshm.handlerListTransports),
+
 		//Route for adding transport to Node
-		MethodRoute{
-			method:  http.MethodPost,
-			handler: POST(lshm.handlerAddTransport),
-		},
+		MethodToHandler(http.MethodPost, lshm.handlerAddTransport),
+
 		//Route for removing transport from Node
-		MethodRoute{
-			method:  http.MethodPost,
-			handler: DELETE(lshm.handlerRemoveTransport),
-		},
+		MethodToHandler(http.MethodDelete, lshm.handlerRemoveTransport),
 	))
 
 }
