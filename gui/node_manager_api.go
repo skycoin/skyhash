@@ -13,7 +13,7 @@ import (
 
 //RegisterNodeManagerHandlers - create routes for NodeManager
 func RegisterNodeManagerHandlers(mux *http.ServeMux, shm *skyhashmanager.SkyhashManager) {
-	//
+	// enclose shm into SkyhashManager to be able to add methods
 	lshm := SkyhashManager{SkyhashManager: shm}
 
 	//  Test  Will be assigned name if present.
@@ -27,12 +27,12 @@ func RegisterNodeManagerHandlers(mux *http.ServeMux, shm *skyhashmanager.Skyhash
 	//Route for stopping Node
 	mux.HandleFunc("/nodemanager/stop", GET(lshm.handlerStopNode))
 
-	mux.HandleFunc("/nodemanager/nodes", MethodMux(
+	mux.HandleFunc("/nodemanager/nodes", MethodsToHandlers(
 		//Route for listing Nodes
 		MethodToHandler(http.MethodGet, GET(lshm.handlerListNodes)),
 	))
 
-	mux.HandleFunc("/nodemanager/transports", MethodMux(
+	mux.HandleFunc("/nodemanager/transports", MethodsToHandlers(
 		//Route for listing transports from Node
 		MethodToHandler(http.MethodGet, lshm.handlerListTransports),
 
@@ -73,8 +73,7 @@ func (shm *SkyhashManager) handlerStartNode(w http.ResponseWriter, r *http.Reque
 //method: GET
 //url: /nodemanager/stop?id=value
 func (shm *SkyhashManager) handlerStopNode(w http.ResponseWriter, r *http.Request) {
-	/*
-		logger.Info("Stoping Node")
+	/*	logger.Info("Stoping Node")
 		nodeID := r.FormValue("id")
 		if nodeID == "" {
 			wh.Error400(w, "Missing Node id")
@@ -86,15 +85,14 @@ func (shm *SkyhashManager) handlerStopNode(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		if len(nm.PubKeyList) < i {
+		if len(shm.PubKeyList) < i {
 			wh.Error400(w, "Invalid Node id")
 			return
 		}
 
-		nm.NodesList[nm.PubKeyList[i]].Close()
-		delete(nm.NodesList, nm.PubKeyList[i])
-		nm.PubKeyList = append(nm.PubKeyList[:i], nm.PubKeyList[i+1:]...)
-	*/
+		shm.NodesList[nm.PubKeyList[i]].Close()
+		delete(shm.Subscriptions, shm.PubKeyList[i])
+		nm.PubKeyList = append(nm.PubKeyList[:i], nm.PubKeyList[i+1:]...)*/
 }
 
 //Handler for /nodemanager/nodes

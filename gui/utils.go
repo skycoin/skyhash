@@ -46,22 +46,22 @@ func DELETE(handler func(w http.ResponseWriter, r *http.Request)) func(w http.Re
 	}
 }
 
-type mRoute struct {
+type methodHandler struct {
 	method  string
 	handler func(w http.ResponseWriter, r *http.Request)
 }
 
-func MethodToHandler(method string, handler func(w http.ResponseWriter, r *http.Request)) *mRoute {
-	return &mRoute{
+func MethodToHandler(method string, handler func(w http.ResponseWriter, r *http.Request)) *methodHandler {
+	return &methodHandler{
 		method:  method,
 		handler: handler,
 	}
 }
 
-// MethodMux selects a mRoute based on the method of the request
-func MethodMux(methodMuxes ...*mRoute) func(w http.ResponseWriter, r *http.Request) {
+// MethodMux selects a methodHandler based on the method of the request
+func MethodsToHandlers(methodRoutes ...*methodHandler) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		for _, m := range methodMuxes {
+		for _, m := range methodRoutes {
 			if r.Method == m.method {
 				m.handler(w, r)
 				return
