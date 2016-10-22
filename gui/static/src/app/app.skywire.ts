@@ -39,7 +39,7 @@ export class loadComponent implements OnInit {
         var self = this;
         var headers = new Headers();
         headers.append('Content-Type', 'application/x-www-form-urlencoded');
-        var url = '/nodemanager/getlistnodes';
+        var url = '/nodemanager/nodes';
         this.http.get(url, { headers: headers })
             .map((res) => res.json())
             .subscribe(data => {
