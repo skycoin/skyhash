@@ -1,8 +1,17 @@
 package skyhashmanager
 
 import (
+	"errors"
+
+	logging "gopkg.in/op/go-logging.v1"
+
+	"github.com/labstack/gommon/log"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skyhash/skyhash"
+)
+
+var (
+	logger = logging.MustGetLogger("skyhashmanager")
 )
 
 type SkyhashManagerConfig struct {
@@ -40,7 +49,7 @@ func (self *SkyhashManager) Shutdown() {
 
 func (self *SkyhashManager) Subscribe(pubkey cipher.PubKey) {
 	node := skyhash.NewPublicBroadcastChannelNode()
-	port := SkyhashManager.Config.Port + len(self.Subscriptions)
+	port := self.Config.Port + len(self.Subscriptions)
 
 	addr, err := self.LookupAddr(pubkey)
 	if err != nil {
