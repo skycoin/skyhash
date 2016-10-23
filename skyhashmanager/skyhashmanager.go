@@ -2,6 +2,7 @@ package skyhashmanager
 
 import (
 	"errors"
+	"sync"
 
 	logging "gopkg.in/op/go-logging.v1"
 
@@ -19,6 +20,7 @@ type SkyhashManagerConfig struct {
 }
 
 type SkyhashManager struct {
+	sync.RWMutex
 	Config        *SkyhashManagerConfig
 	Subscriptions map[*cipher.PubKey]*skyhash.PublicBroadcastChannelNode
 	Nodes         map[int]*skyhash.PublicBroadcastChannelNode
