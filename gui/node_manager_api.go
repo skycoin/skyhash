@@ -135,12 +135,24 @@ func (self *SkyhashManager) handlerListNodes(w http.ResponseWriter, r *http.Requ
 
 	logger.Info("Get list of nodes")
 
-	nodeIDs := make([]int, 0, len(self.Nodes))
-	for key := range self.Nodes {
-		nodeIDs = append(nodeIDs, key)
+	nodeList := map[int]struct {
+		Address string
+		Port    uint16
+	}{}
+
+	for nodeID, node := range self.Nodes {
+		var nodeInfo struct {
+			Address string
+			Port    uint16
+		}
+
+		nodeInfo.Address = node.ConnectionPool.Config.Address
+		nodeInfo.Port = node.ConnectionPool.Config.Port
+
+		nodeList[nodeID] = nodeInfo
 	}
 
-	wh.SendJSON(w, nodeIDs)
+	wh.SendJSON(w, nodeList)
 }
 
 //Handler for /nodemanager/transports
