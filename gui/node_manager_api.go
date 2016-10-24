@@ -2,194 +2,264 @@ package gui
 
 import (
 	//"encoding/json"
+
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	//"strconv"
 
 	wh "github.com/skycoin/skycoin/src/util/http"
+	"github.com/skycoin/skyhash/skyhash"
 	"github.com/skycoin/skyhash/skyhashmanager"
 )
 
-func testHandler(shm *skyhashmanager.SkyhashManager) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		wh.Error400(w, fmt.Sprint("Works!"))
-
-		if addr := r.FormValue("addr"); addr == "" {
-			wh.Error404(w)
-		} else {
-			//wh.SendOr404(w, nm.GetConnection(addr))
-			wh.Error404(w)
-		}
-	}
-}
-
-func subscriptionsGetHandler(shm *skyhashmanager.SkyhashManager) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Info("Get subscriptions list")
-		wh.SendJSON(w, shm.Subscriptions)
-	}
-}
-
-// //Handler for /nodemanager/start - add new Node
-// //mode: GET
-// //url: /nodemanager/start
-// func nodeStartHandler(nm *nodemanager.NodeManager) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		logger.Info("Starting Node")
-// 		count := len(nm.NodesList)
-// 		i := nm.AddNode()
-// 		if i != count {
-// 			wh.Error500(w)
-// 		}
-
-// 	}
-// }
-
-// //Handler for /nodemanager/stop - stop Node
-// //mode: GET
-// //url: /nodemanager/stop?id=value
-// func nodeStopHandler(nm *nodemanager.NodeManager) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		logger.Info("Stoping Node")
-// 		nodeID := r.FormValue("id")
-// 		if nodeID == "" {
-// 			wh.Error400(w, "Missing Node id")
-// 			return
-// 		}
-// 		i, err := strconv.Atoi(nodeID)
-// 		if err != nil {
-// 			wh.Error400(w, "Node id must be integer")
-// 			return
-// 		}
-
-// 		if len(nm.PubKeyList) < i {
-// 			wh.Error400(w, "Invalid Node id")
-// 			return
-// 		}
-
-// 		nm.NodesList[nm.PubKeyList[i]].Close()
-// 		delete(nm.NodesList, nm.PubKeyList[i])
-// 		nm.PubKeyList = append(nm.PubKeyList[:i], nm.PubKeyList[i+1:]...)
-
-// 	}
-// }
-
-// //Handler for /nodemanager/getlistnodes
-// //mode: GET
-// //url: /nodemanager/getlistnodes
-// //return: array of PubKey
-// func nodeGetListNodesHandler(nm *nodemanager.NodeManager) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		logger.Info("Get list nodes")
-// 		// var list ListNodes
-// 		// for _, PubKey := range nm.PubKeyList {
-// 		// 	list.PubKey = append(list.PubKey, string(PubKey[:]))
-// 		// }
-// 		wh.SendJSON(w, nm.PubKeyList)
-
-// 	}
-// }
-
-// //Handler for /nodemanager/gettransports
-// //mode: GET
-// //url: /nodemanager/gettransports?id=value
-// func nodeGetTransportsHandler(nm *nodemanager.NodeManager) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		logger.Info("Get transport from Node")
-// 		nodeID := r.FormValue("id")
-// 		if nodeID == "" {
-// 			wh.Error400(w, "Missing Node id")
-// 			return
-// 		}
-// 		i, err := strconv.Atoi(nodeID)
-// 		if err != nil {
-// 			wh.Error400(w, "Node id must be integer")
-// 			return
-// 		}
-
-// 		if len(nm.PubKeyList) < i {
-// 			wh.Error400(w, "Invalid Node id")
-// 			return
-// 		}
-
-// 		wh.SendJSON(w, nm.GetTransportsFromNode(i))
-
-// 	}
-// }
-
-// //Handler for /nodemanager/addtransport
-// //mode: POST
-// //url: /nodemanager/addtransport
-// func nodeAddTransportHandler(nm *nodemanager.NodeManager) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		logger.Info("Add transport to Node")
-
-// 		var c ConfigWithID
-// 		err := json.NewDecoder(r.Body).Decode(&c)
-
-// 		if err != nil {
-// 			wh.Error400(w, "Error decoding config for transport")
-// 		}
-// 		if len(nm.PubKeyList) < c.NodeID {
-// 			wh.Error400(w, "Invalid Node id")
-// 			return
-// 		}
-
-// 		node := nm.GetNodeByIndex(c.NodeID)
-// 		nodemanager.AddTransportToNode(node, c.Config)
-// 	}
-// }
-
-// //Handler for /nodemanager/removetransport
-// //mode: POST
-// //url: /nodemanager/removetransport
-// func nodeRemoveTransportHandler(nm *nodemanager.NodeManager) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		logger.Info("Remove transport from Node")
-
-// 		var c TransportWithID
-// 		err := json.NewDecoder(r.Body).Decode(&c)
-
-// 		if err != nil {
-// 			wh.Error400(w, "Error decoding config for transport")
-// 		}
-// 		if len(nm.PubKeyList) < c.NodeID {
-// 			wh.Error400(w, "Invalid Node id")
-// 			return
-// 		}
-// 		logger.Info(strconv.Itoa(c.NodeID))
-
-// 		nm.RemoveTransportsFromNode(c.NodeID, c.Transport)
-
-// 	}
-// }
-
 //RegisterNodeManagerHandlers - create routes for NodeManager
 func RegisterNodeManagerHandlers(mux *http.ServeMux, shm *skyhashmanager.SkyhashManager) {
-	//
+	// enclose shm into SkyhashManager to be able to add methods
+	lshm := SkyhashManager{SkyhashManager: shm}
 
 	//  Test  Will be assigned name if present.
-	mux.HandleFunc("/test", testHandler(shm))
+	mux.HandleFunc("/test", GET(lshm.testHandler))
 
-	mux.HandleFunc("/subscriptions", subscriptionsGetHandler(shm))
+	mux.HandleFunc("/subscriptions", GET(lshm.handlerListSubscriptions))
 
-	//Route for start Node
-	//mux.HandleFunc("/nodemanager/start", nodeStartHandler(nm))
+	//Route for starting Node
+	mux.HandleFunc("/nodemanager/nodes/start", POST(lshm.handlerStartNode))
 
-	//Route for stop Node
-	//mux.HandleFunc("/nodemanager/stop", nodeStopHandler(nm))
+	//Route for stopping Node
+	mux.HandleFunc("/nodemanager/nodes/stop", GET(lshm.handlerStopNode))
 
-	//Route for get transports from Node
-	//mux.HandleFunc("/nodemanager/gettransports", nodeGetTransportsHandler(nm))
+	mux.HandleFunc("/nodemanager/nodes", MethodsToHandlers(
+		//Route for listing Nodes
+		MethodToHandler(http.MethodGet, GET(lshm.handlerListNodes)),
+	))
 
-	//Route for add transport to Node
-	//mux.HandleFunc("/nodemanager/addtransport", nodeAddTransportHandler(nm))
+	mux.HandleFunc("/nodemanager/transports", MethodsToHandlers(
+		//Route for listing transports from Node
+		MethodToHandler(http.MethodGet, lshm.handlerListTransports),
 
-	//Route for remove transport from Node
-	//mux.HandleFunc("/nodemanager/removetransport", nodeRemoveTransportHandler(nm))
+		//Route for adding transport to Node
+		MethodToHandler(http.MethodPost, lshm.handlerAddTransport),
 
-	//Route for get list Nodes
-	//mux.HandleFunc("/nodemanager/getlistnodes", nodeGetListNodesHandler(nm))
+		//Route for removing transport from Node
+		MethodToHandler(http.MethodDelete, lshm.handlerRemoveTransport),
+	))
 
+}
+
+func (self *SkyhashManager) testHandler(w http.ResponseWriter, r *http.Request) {
+
+	wh.Error400(w, fmt.Sprint("Works!"))
+
+	if addr := r.FormValue("addr"); addr == "" {
+		wh.Error404(w)
+	} else {
+		//wh.SendOr404(w, nm.GetConnection(addr))
+		wh.Error404(w)
+	}
+}
+
+func (self *SkyhashManager) handlerListSubscriptions(w http.ResponseWriter, r *http.Request) {
+	logger.Info("Get subscriptions list")
+
+	keysSubscribedTo := make([]string, 0, len(self.Subscriptions))
+	for key := range self.Subscriptions {
+		keysSubscribedTo = append(keysSubscribedTo, key.Hex())
+	}
+
+	wh.SendJSON(w, keysSubscribedTo)
+}
+
+//Handler for /nodemanager/nodes/start
+//method: POST
+//url: /nodemanager/nodes/start
+func (self *SkyhashManager) handlerStartNode(w http.ResponseWriter, r *http.Request) {
+	// QUESTION: what parameters does this handler need?
+	// QUESTION: should the node IDs be serial ints?
+	// QUESTION: should node IDs be immutable? (i.e. a speicifc node has always the same ID)
+
+	logger.Info("Starting Node")
+
+	newNodeID := len(self.Nodes) + 1
+
+	// TODO: manage node ids without conflicts or duplication
+
+	if _, ok := self.Nodes[newNodeID]; ok {
+		// node with this id already exists
+		http.Error(w, "node already exists", http.StatusInternalServerError)
+	}
+
+	newNode := skyhash.NewPublicBroadcastChannelNode()
+	newNode.InitConnectionPool(6060 + newNodeID)
+
+	self.Nodes[newNodeID] = newNode
+
+	w.WriteHeader(http.StatusOK)
+	// return id of new node
+	w.Write([]byte(strconv.Itoa(newNodeID)))
+}
+
+//Handler for /nodemanager/nodes/stop - stop Node
+//method: GET
+//url: /nodemanager/nodes/stop?id=value
+func (self *SkyhashManager) handlerStopNode(w http.ResponseWriter, r *http.Request) {
+	/*	logger.Info("Stoping Node")
+		nodeID := r.FormValue("id")
+		if nodeID == "" {
+			wh.Error400(w, "Missing Node id")
+			return
+		}
+		i, err := strconv.Atoi(nodeID)
+		if err != nil {
+			wh.Error400(w, "Node id must be integer")
+			return
+		}
+
+		if len(shm.PubKeyList) < i {
+			wh.Error400(w, "Invalid Node id")
+			return
+		}
+
+		shm.NodesList[nm.PubKeyList[i]].Close()
+		delete(shm.Subscriptions, shm.PubKeyList[i])
+		nm.PubKeyList = append(nm.PubKeyList[:i], nm.PubKeyList[i+1:]...)*/
+}
+
+//Handler for /nodemanager/nodes
+//method: GET
+//url: /nodemanager/nodes
+//return: array of PubKey
+func (self *SkyhashManager) handlerListNodes(w http.ResponseWriter, r *http.Request) {
+	// QUESTION: what info should be displayed about each node?
+
+	logger.Info("Get list of nodes")
+
+	nodeList := map[int]struct {
+		Address string
+		Port    uint16
+	}{}
+
+	for nodeID, node := range self.Nodes {
+		var nodeInfo struct {
+			Address string
+			Port    uint16
+		}
+
+		nodeInfo.Address = node.ConnectionPool.Config.Address
+		nodeInfo.Port = node.ConnectionPool.Config.Port
+
+		nodeList[nodeID] = nodeInfo
+	}
+
+	wh.SendJSON(w, nodeList)
+}
+
+//Handler for /nodemanager/transports
+//method: GET
+//url: /nodemanager/transports?id=value
+func (self *SkyhashManager) handlerListTransports(w http.ResponseWriter, r *http.Request) {
+	logger.Info("List transports from Node")
+
+	// TODO: nodeID, err := nodeIDFromURL(r.URL)
+	nodeID := r.URL.Query().Get("id")
+	if nodeID == "" {
+		wh.Error400(w, "Missing Node id")
+		return
+	}
+	i, err := strconv.Atoi(nodeID)
+	if err != nil {
+		wh.Error400(w, "Node id must be integer")
+		return
+	}
+
+	// check whether node exists, and fetch it
+	node, ok := self.Nodes[i]
+	if !ok {
+		wh.Error400(w, "Invalid Node id")
+		return
+	}
+
+	addresses := make([]string, 0, len(node.ConnectionPool.Addresses))
+	for key := range node.ConnectionPool.Addresses {
+		addresses = append(addresses, key)
+	}
+
+	wh.SendJSON(w, addresses)
+}
+
+//Handler for /nodemanager/transports
+//method: POST
+//url: /nodemanager/transports
+func (self *SkyhashManager) handlerAddTransport(w http.ResponseWriter, r *http.Request) {
+	logger.Info("Add transport to Node")
+
+	// TODO: nodeID, err := nodeIDFromURL(r.URL)
+	nodeID := r.URL.Query().Get("id")
+	if nodeID == "" {
+		wh.Error400(w, "Missing Node id")
+		return
+	}
+	i, err := strconv.Atoi(nodeID)
+	if err != nil {
+		wh.Error400(w, "Node id must be integer")
+		return
+	}
+
+	// check whether node exists, and fetch it
+	node, ok := self.Nodes[i]
+	if !ok {
+		wh.Error400(w, "Invalid Node id")
+		return
+	}
+
+	// decode configuration of the new transport to be created
+	var newTransportConfig struct {
+		IP   string `json:"ip"`
+		Port string `json:"port"`
+	}
+	err = json.NewDecoder(r.Body).Decode(&newTransportConfig)
+	if err != nil {
+		wh.Error400(w, "Error decoding config for transport")
+		return
+	}
+
+	if newTransportConfig.IP == "" {
+		wh.Error400(w, "ip is not set")
+	}
+	if newTransportConfig.Port == "" {
+		wh.Error400(w, "port is not set")
+		return
+	}
+
+	// add trasport to node
+	_, err = node.ConnectionPool.Connect(fmt.Sprintf("%v:%v", newTransportConfig.IP, newTransportConfig.Port))
+	if err != nil {
+		wh.Error400(w, "Error while adding trasport to node")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return
+}
+
+//Handler for /nodemanager/transports
+//method: DELETE
+//url: /nodemanager/transports
+func (self *SkyhashManager) handlerRemoveTransport(w http.ResponseWriter, r *http.Request) {
+	/*	logger.Info("Remove transport from Node")
+
+		var c TransportWithID
+		err := json.NewDecoder(r.Body).Decode(&c)
+
+		if err != nil {
+			wh.Error400(w, "Error decoding config for transport")
+		}
+		if len(nm.PubKeyList) < c.NodeID {
+			wh.Error400(w, "Invalid Node id")
+			return
+		}
+		logger.Info(strconv.Itoa(c.NodeID))
+
+		nm.RemoveTransportsFromNode(c.NodeID, c.Transport)*/
 }

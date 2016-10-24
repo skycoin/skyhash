@@ -1,4 +1,4 @@
-package main
+package skyhash
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/skycoin/skycoin/src/cipher"
-	gnet "github.com/skycoin/telehash/gnet"
+	gnet "github.com/skycoin/skyhash/gnet"
 )
 
 //this is called when client connects
