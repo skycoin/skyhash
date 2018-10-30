@@ -5,7 +5,9 @@
   "scripts": {
     "clean": "gulp clean",
     "compile": "gulp compile",
-    "build": "gulp build"
+    "build": "gulp build",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "license": "Apache-2.0",
   "repository": {
@@ -26,6 +28,8 @@
     "reflect-metadata": "0.1.2",
     "rxjs": "5.0.0-beta.6",
     "systemjs": "0.19.27",
-    "zone.js": "^0.6.12"
-  }
+    "zone.js": "^0.6.12",
+    "snyk": "^1.105.0"
+  },
+  "snyk": true
 }
